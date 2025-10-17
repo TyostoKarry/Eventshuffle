@@ -7,5 +7,5 @@ import org.springframework.boot.runApplication
 class EventshuffleApplication
 
 fun main(args: Array<String>) {
-	runApplication<EventshuffleApplication>(*args)
+    runApplication<EventshuffleApplication>(*args)
 }
