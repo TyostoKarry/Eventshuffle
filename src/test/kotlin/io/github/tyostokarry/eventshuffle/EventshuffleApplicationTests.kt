@@ -5,9 +5,6 @@ import org.springframework.boot.test.context.SpringBootTest
 
 @SpringBootTest
 class EventshuffleApplicationTests {
-
-	@Test
-	fun contextLoads() {
-	}
-
+    @Test
+    fun contextLoads() {}
 }
