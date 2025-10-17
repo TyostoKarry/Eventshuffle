@@ -1,0 +1,38 @@
+name: Verify Pull Request
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  verify:
+    name: Verify PR Changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v5
+
+      - name: Setup JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: "temurin"
+          java-version: "21"
+          cache: gradle
+
+      - name: Grant execute permissions for Gradle
+        run: chmod +x gradlew
+
+      - name: Run Ktlint check
+        run: ./gradlew ktlintCheck --no-daemon
+
+      - name: Run tests
+        run: ./gradlew test --no-daemon
+
+      - name: Assemble project
+        run: ./gradlew clean assemble --no-daemon
