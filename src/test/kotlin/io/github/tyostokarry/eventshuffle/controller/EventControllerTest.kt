@@ -9,10 +9,12 @@ import io.github.tyostokarry.eventshuffle.entity.Event
 import io.github.tyostokarry.eventshuffle.exception.EventNotFoundException
 import io.github.tyostokarry.eventshuffle.service.EventService
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertNotNull
 import org.mockito.kotlin.any
 import org.mockito.kotlin.given
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
+import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
@@ -21,8 +23,10 @@ import org.springframework.test.web.servlet.post
 import java.time.LocalDate
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.text.contains
 
-@WebMvcTest(EventController::class)
+@SpringBootTest
+@AutoConfigureMockMvc
 class EventControllerTest(
     @Autowired val mockMvc: MockMvc,
     @Autowired val objectMapper: ObjectMapper,
@@ -127,11 +131,20 @@ class EventControllerTest(
 
         val body = objectMapper.writeValueAsString(invalidRequest)
 
-        mockMvc
-            .post("/api/v1/event") {
-                contentType = MediaType.APPLICATION_JSON
-                content = body
-            }.andExpect { status { isBadRequest() } }
+        val mvcResult =
+            mockMvc
+                .post("/api/v1/event") {
+                    contentType = MediaType.APPLICATION_JSON
+                    content = body
+                }.andExpect { status { isBadRequest() } }
+                .andReturn()
+
+        val message = mvcResult.resolvedException?.message
+        assertNotNull(message)
+        assertTrue(
+            message.contains("Event name must not be blank"),
+            "Error body should contain 'Event name must not be blank'.",
+        )
     }
 
     @Test
@@ -139,15 +152,24 @@ class EventControllerTest(
         val invalidJson =
             """
             {
-                "dates": ["not-a-date", "2025-11-12"]
+                "dates": ["2025-11-05", "2025-11-12"]
             }
             """.trimIndent()
 
-        mockMvc
-            .post("/api/v1/event") {
-                contentType = MediaType.APPLICATION_JSON
-                content = invalidJson
-            }.andExpect { status { isBadRequest() } }
+        val mvcResult =
+            mockMvc
+                .post("/api/v1/event") {
+                    contentType = MediaType.APPLICATION_JSON
+                    content = invalidJson
+                }.andExpect { status { isBadRequest() } }
+                .andReturn()
+
+        val message = mvcResult.resolvedException?.message
+        assertNotNull(message)
+        assertTrue(
+            message.contains("value failed for JSON property name due to missing"),
+            "Error body should contain 'value failed for JSON property name due to missing'.",
+        )
     }
 
     @Test
@@ -156,11 +178,20 @@ class EventControllerTest(
 
         val body = objectMapper.writeValueAsString(invalidRequest)
 
-        mockMvc
-            .post("/api/v1/event") {
-                contentType = MediaType.APPLICATION_JSON
-                content = body
-            }.andExpect { status { isBadRequest() } }
+        val mvcResult =
+            mockMvc
+                .post("/api/v1/event") {
+                    contentType = MediaType.APPLICATION_JSON
+                    content = body
+                }.andExpect { status { isBadRequest() } }
+                .andReturn()
+
+        val message = mvcResult.resolvedException?.message
+        assertNotNull(message)
+        assertTrue(
+            message.contains("At least one date must be provided"),
+            "Error body should contain 'At least one date must be provided'.",
+        )
     }
 
     @Test
@@ -168,15 +199,24 @@ class EventControllerTest(
         val invalidJson =
             """
             {
-                "name": "Test Event",
+                "name": "Test Event"
             }
             """.trimIndent()
 
-        mockMvc
-            .post("/api/v1/event") {
-                contentType = MediaType.APPLICATION_JSON
-                content = invalidJson
-            }.andExpect { status { isBadRequest() } }
+        val mvcResult =
+            mockMvc
+                .post("/api/v1/event") {
+                    contentType = MediaType.APPLICATION_JSON
+                    content = invalidJson
+                }.andExpect { status { isBadRequest() } }
+                .andReturn()
+
+        val message = mvcResult.resolvedException?.message
+        assertNotNull(message)
+        assertTrue(
+            message.contains(" value failed for JSON property dates due to missing"),
+            "Error body should contain ' value failed for JSON property dates due to missing'.",
+        )
     }
 
     @Test
@@ -189,10 +229,20 @@ class EventControllerTest(
             }
             """.trimIndent()
 
-        mockMvc
-            .post("/api/v1/event") {
-                contentType = MediaType.APPLICATION_JSON
-                content = invalidJson
-            }.andExpect { status { isBadRequest() } }
+        val mvcResult =
+            mockMvc
+                .post("/api/v1/event") {
+                    contentType = MediaType.APPLICATION_JSON
+                    content = invalidJson
+                }.andExpect { status { isBadRequest() } }
+                .andReturn()
+
+        val message = mvcResult.resolvedException?.message
+        assertNotNull(message)
+        assertTrue(
+            message.contains("not-a-date") &&
+                message.contains("Cannot deserialize value of type"),
+            "Error body should contain an indication of invalid date format.",
+        )
     }
 }
