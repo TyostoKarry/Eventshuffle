@@ -8,6 +8,7 @@ import io.github.tyostokarry.eventshuffle.dto.EventListResponse
 import io.github.tyostokarry.eventshuffle.entity.Event
 import io.github.tyostokarry.eventshuffle.service.EventService
 import jakarta.validation.Valid
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -44,6 +45,6 @@ class EventController(
         val event = Event(name = request.name, dates = request.dates)
         val saved = eventService.saveEvent(event)
         val response = EventCreateResponse(saved.id)
-        return ResponseEntity.ok(response)
+        return ResponseEntity.status(HttpStatus.CREATED).body(response)
     }
 }
