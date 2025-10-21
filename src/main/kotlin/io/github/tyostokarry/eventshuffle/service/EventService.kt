@@ -1,7 +1,7 @@
 package io.github.tyostokarry.eventshuffle.service
 
+import io.github.tyostokarry.eventshuffle.dto.EventDetailsResponse
 import io.github.tyostokarry.eventshuffle.dto.VoteCreateRequest
-import io.github.tyostokarry.eventshuffle.dto.VoteCreateResponse
 import io.github.tyostokarry.eventshuffle.entity.Event
 import io.github.tyostokarry.eventshuffle.entity.EventVote
 import io.github.tyostokarry.eventshuffle.exception.EventNotFoundException
@@ -24,7 +24,7 @@ class EventService(
     fun addVote(
         eventId: Long,
         request: VoteCreateRequest,
-    ): VoteCreateResponse {
+    ): EventDetailsResponse {
         val event = getEventById(eventId)
 
         val invalidDates = request.votes.filterNot { it in event.dates }
@@ -50,6 +50,6 @@ class EventService(
         event.votes.add(newVote)
 
         val saved = eventRepository.save(event)
-        return VoteCreateResponse.fromEvent(saved)
+        return EventDetailsResponse.fromEvent(saved)
     }
 }

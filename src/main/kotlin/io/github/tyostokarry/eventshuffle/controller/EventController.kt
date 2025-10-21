@@ -6,7 +6,6 @@ import io.github.tyostokarry.eventshuffle.dto.EventDetailsResponse
 import io.github.tyostokarry.eventshuffle.dto.EventListItemDto
 import io.github.tyostokarry.eventshuffle.dto.EventListResponse
 import io.github.tyostokarry.eventshuffle.dto.VoteCreateRequest
-import io.github.tyostokarry.eventshuffle.dto.VoteCreateResponse
 import io.github.tyostokarry.eventshuffle.entity.Event
 import io.github.tyostokarry.eventshuffle.service.EventService
 import jakarta.validation.Valid
@@ -36,8 +35,7 @@ class EventController(
         @PathVariable id: Long,
     ): ResponseEntity<EventDetailsResponse> {
         val event = eventService.getEventById(id)
-        val dto = EventDetailsResponse(event.id, event.name, event.dates)
-        return ResponseEntity.ok(dto)
+        return ResponseEntity.ok(EventDetailsResponse.fromEvent(event))
     }
 
     @PostMapping
@@ -54,7 +52,7 @@ class EventController(
     fun voteOnEvent(
         @PathVariable id: Long,
         @RequestBody request: VoteCreateRequest,
-    ): ResponseEntity<VoteCreateResponse> {
+    ): ResponseEntity<EventDetailsResponse> {
         val response = eventService.addVote(id, request)
         return ResponseEntity.ok(response)
     }
