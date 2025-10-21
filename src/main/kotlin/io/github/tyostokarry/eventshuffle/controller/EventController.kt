@@ -53,7 +53,8 @@ class EventController(
         @PathVariable id: Long,
         @RequestBody request: VoteCreateRequest,
     ): ResponseEntity<EventDetailsResponse> {
-        val response = eventService.addVote(id, request)
+        val event = eventService.addVote(id, request)
+        val response = EventDetailsResponse.fromEvent(event)
         return ResponseEntity.ok(response)
     }
 }
