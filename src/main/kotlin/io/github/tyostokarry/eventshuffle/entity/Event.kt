@@ -1,5 +1,6 @@
 package io.github.tyostokarry.eventshuffle.entity
 
+import jakarta.persistence.CascadeType
 import jakarta.persistence.CollectionTable
 import jakarta.persistence.Column
 import jakarta.persistence.ElementCollection
@@ -9,6 +10,7 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
+import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import java.time.LocalDate
 
@@ -44,4 +46,16 @@ data class Event(
     @CollectionTable(name = "event_dates", joinColumns = [JoinColumn(name = "event_id")])
     @Column(nullable = false)
     val dates: List<LocalDate> = emptyList(),
+    /**
+     * Votes submitted for this event.
+     * Each entry represents a participant’s date selections.
+     * Eagerly fetched and cascades all operations.
+     */
+    @OneToMany(
+        mappedBy = "event",
+        cascade = [CascadeType.ALL],
+        orphanRemoval = true,
+        fetch = FetchType.EAGER,
+    )
+    val votes: MutableList<EventVote> = mutableListOf(),
 )
