@@ -40,13 +40,15 @@ class EventService(
         // If participant has voted previously, remove old vote
         event.votes.removeIf { it.voterName.equals(request.name, ignoreCase = true) }
 
-        val newVote =
-            EventVote(
-                voterName = request.name,
-                votedDates = request.votes,
-                event = event,
-            )
-        event.votes.add(newVote)
+        if (request.votes.isNotEmpty()) {
+            val newVote =
+                EventVote(
+                    voterName = request.name,
+                    votedDates = request.votes,
+                    event = event,
+                )
+            event.votes.add(newVote)
+        }
 
         val saved = eventRepository.save(event)
         return saved
