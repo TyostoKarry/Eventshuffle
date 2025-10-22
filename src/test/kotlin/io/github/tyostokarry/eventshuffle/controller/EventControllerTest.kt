@@ -5,6 +5,7 @@ import io.github.tyostokarry.eventshuffle.dto.EventCreateRequest
 import io.github.tyostokarry.eventshuffle.dto.EventCreateResponse
 import io.github.tyostokarry.eventshuffle.dto.EventDetailsResponse
 import io.github.tyostokarry.eventshuffle.dto.EventListResponse
+import io.github.tyostokarry.eventshuffle.dto.EventResultResponse
 import io.github.tyostokarry.eventshuffle.dto.VoteCreateRequest
 import io.github.tyostokarry.eventshuffle.entity.Event
 import io.github.tyostokarry.eventshuffle.entity.EventVote
@@ -386,6 +387,166 @@ class EventControllerTest(
                 "Invalid vote date(s) for event 'My Event' (ID: 1): Provided = [2025-10-05], Allowed = [2025-11-05, 2025-11-12], Invalid = [2025-10-05]",
                 responseBody,
                 "Error body should contain an indication of invalid vote date.",
+            )
+        }
+    }
+
+    @Nested
+    inner class GetResult {
+        @Test
+        fun `get event results returns aggregated vote summary`() {
+            val event =
+                Event(
+                    id = 1L,
+                    name = "Test Event",
+                    dates =
+                        listOf(
+                            LocalDate.of(2025, 10, 5),
+                            LocalDate.of(2025, 10, 6),
+                        ),
+                )
+
+            event.votes.addAll(
+                listOf(
+                    EventVote(
+                        id = 1L,
+                        voterName = "Test Name 1",
+                        votedDates = listOf(LocalDate.of(2025, 10, 5)),
+                        event = event,
+                    ),
+                    EventVote(
+                        id = 2L,
+                        voterName = "Test Name 2",
+                        votedDates =
+                            listOf(
+                                LocalDate.of(2025, 10, 5),
+                                LocalDate.of(2025, 10, 6),
+                            ),
+                        event = event,
+                    ),
+                ),
+            )
+
+            given(eventService.getEventById(1L)).willReturn(event)
+
+            val responseBody =
+                mockMvc
+                    .get("/api/v1/event/1/results")
+                    .andExpect { status { isOk() } }
+                    .andReturn()
+                    .response
+                    .contentAsString
+
+            val response = objectMapper.readValue(responseBody, EventResultResponse::class.java)
+
+            assertEquals(1, response.id, "Response event id should be 1")
+            assertEquals("Test Event", response.name, "Response event name should be 'Test Event'")
+            assertEquals(1, response.suitableDates.size, "Response event should have exactly 1 suitable date")
+            assertEquals(
+                LocalDate.of(2025, 10, 5),
+                response.suitableDates.first().date,
+                "Response events suitable date should be '2025-10-05'",
+            )
+            assertEquals(
+                listOf("Test Name 1", "Test Name 2"),
+                response.suitableDates.first().people,
+                "Response events suitable date voters should be 'Test Name 1', 'Test Name 2'",
+            )
+        }
+
+        @Test
+        fun `get event results returns empty suitable dates list when no votes are recorded`() {
+            val event =
+                Event(
+                    id = 1L,
+                    name = "Test Event",
+                    dates =
+                        listOf(
+                            LocalDate.of(2025, 10, 5),
+                            LocalDate.of(2025, 10, 6),
+                        ),
+                )
+
+            given(eventService.getEventById(1L)).willReturn(event)
+
+            val responseBody =
+                mockMvc
+                    .get("/api/v1/event/1/results")
+                    .andExpect { status { isOk() } }
+                    .andReturn()
+                    .response
+                    .contentAsString
+
+            val response = objectMapper.readValue(responseBody, EventResultResponse::class.java)
+
+            assertEquals(1, response.id, "Response event id should be 1")
+            assertEquals("Test Event", response.name, "Response event name should be 'Test Event'")
+            assertTrue(response.suitableDates.isEmpty(), "Response event should have no suitable dates")
+        }
+
+        @Test
+        fun `get event results returns empty suitable dates list when no date has everyone's vote`() {
+            val event =
+                Event(
+                    id = 1L,
+                    name = "Test Event",
+                    dates =
+                        listOf(
+                            LocalDate.of(2025, 10, 5),
+                            LocalDate.of(2025, 10, 6),
+                        ),
+                )
+
+            event.votes.addAll(
+                listOf(
+                    EventVote(
+                        id = 1L,
+                        voterName = "Test Name 1",
+                        votedDates = listOf(LocalDate.of(2025, 10, 5)),
+                        event = event,
+                    ),
+                    EventVote(
+                        id = 2L,
+                        voterName = "Test Name 2",
+                        votedDates = listOf(LocalDate.of(2025, 10, 6)),
+                        event = event,
+                    ),
+                ),
+            )
+
+            given(eventService.getEventById(1L)).willReturn(event)
+
+            val responseBody =
+                mockMvc
+                    .get("/api/v1/event/1/results")
+                    .andExpect { status { isOk() } }
+                    .andReturn()
+                    .response
+                    .contentAsString
+
+            val response = objectMapper.readValue(responseBody, EventResultResponse::class.java)
+
+            assertEquals(1, response.id, "Response event id should be 1")
+            assertEquals("Test Event", response.name, "Response event name should be 'Test Event'")
+            assertTrue(response.suitableDates.isEmpty(), "Response event should have no suitable dates")
+        }
+
+        @Test
+        fun `get event results returns 404 when event not found`() {
+            given(eventService.getEventById(999L)).willThrow(EventNotFoundException(999L))
+
+            val responseBody =
+                mockMvc
+                    .get("/api/v1/event/999/results")
+                    .andExpect { status { isNotFound() } }
+                    .andReturn()
+                    .response
+                    .contentAsString
+
+            assertEquals(
+                "Event with ID 999 not found",
+                responseBody,
+                "Error body should contain an indication of invalid event id.",
             )
         }
     }
