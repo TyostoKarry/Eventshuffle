@@ -5,6 +5,7 @@ import io.github.tyostokarry.eventshuffle.dto.EventCreateResponse
 import io.github.tyostokarry.eventshuffle.dto.EventDetailsResponse
 import io.github.tyostokarry.eventshuffle.dto.EventListItemDto
 import io.github.tyostokarry.eventshuffle.dto.EventListResponse
+import io.github.tyostokarry.eventshuffle.dto.EventResultResponse
 import io.github.tyostokarry.eventshuffle.dto.VoteCreateRequest
 import io.github.tyostokarry.eventshuffle.entity.Event
 import io.github.tyostokarry.eventshuffle.service.EventService
@@ -55,6 +56,15 @@ class EventController(
     ): ResponseEntity<EventDetailsResponse> {
         val event = eventService.addVote(id, request)
         val response = EventDetailsResponse.fromEvent(event)
+        return ResponseEntity.ok(response)
+    }
+
+    @GetMapping("/{id}/results")
+    fun getEventResults(
+        @PathVariable id: Long,
+    ): ResponseEntity<EventResultResponse> {
+        val event = eventService.getEventById(id)
+        val response = EventResultResponse.fromEvent(event)
         return ResponseEntity.ok(response)
     }
 }
